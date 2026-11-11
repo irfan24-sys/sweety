@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { signupUser } from "../api/authApi";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -8,6 +9,9 @@ export default function Signup() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    dob: "",
+    sex: "",
     diabetesType: "Type 1",
     password: "",
     confirmPassword: "",
@@ -19,6 +23,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handle form inputs
   const updateField = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -30,12 +35,14 @@ export default function Signup() {
     setError("");
   };
 
-  const passwordStrength = () => {
+  // Password strength
+  const getPasswordStrength = () => {
     const password = formData.password;
 
     if (!password) return 0;
 
     let score = 0;
+
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
@@ -44,34 +51,69 @@ export default function Signup() {
     return score;
   };
 
-  const strength = passwordStrength();
+  const strength = getPasswordStrength();
 
   const strengthLabel = ["Weak", "Fair", "Good", "Strong"];
 
+  // Get today's date in local time
+  const today = new Date();
+  const maxDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  // SIGNUP SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
+    // Name validation
     if (!formData.name.trim()) {
       return setError("Please enter your full name.");
     }
 
-    if (!formData.email.trim()) {
+    // Email validation
+    const email = formData.email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email) {
       return setError("Please enter your email address.");
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!emailRegex.test(email)) {
       return setError("Please enter a valid email address.");
     }
 
+    // Phone validation (optional)
+    if (
+      formData.phone &&
+      !/^[+]?[0-9\s()-]{7,15}$/.test(formData.phone.trim())
+    ) {
+      return setError("Please enter a valid phone number.");
+    }
+
+    // Date validation
+    if (formData.dob && formData.dob > maxDate) {
+      return setError("Date of birth cannot be in the future.");
+    }
+
+    // Diabetes type validation
+    if (!formData.diabetesType) {
+      return setError("Please select your diabetes classification.");
+    }
+
+    // Password validation
     if (formData.password.length < 8) {
       return setError("Password must contain at least 8 characters.");
     }
 
+    // Confirm password
     if (formData.password !== formData.confirmPassword) {
       return setError("Passwords do not match.");
     }
 
+    // Terms validation
     if (!formData.agree) {
       return setError("Please accept the Terms of Service.");
     }
@@ -79,33 +121,59 @@ export default function Signup() {
     try {
       setLoading(true);
 
-      // Connect your signup API here.
-      // Example:
-      // await signupUser({
-      //   name: formData.name,
-      //   email: formData.email,
-      //   password: formData.password,
-      //   diabetesType: formData.diabetesType,
-      // });
-
-      console.log("Signup form data:", {
-        name: formData.name,
-        email: formData.email,
+      // Send registration details to backend
+      const response = await signupUser({
+        name: formData.name.trim(),
+        email,
+        phone: formData.phone.trim(),
+        dob: formData.dob,
+        sex: formData.sex,
+        password: formData.password,
         diabetesType: formData.diabetesType,
       });
 
-      setError(
-        "Form validation successful. Connect your backend signup API to create the account."
+      // Verify backend response
+      if (!response.success || !response.token) {
+        throw new Error(
+          response.message || "Registration failed."
+        );
+      }
+
+      // Save authentication token
+      localStorage.setItem("token", response.token);
+
+      // Save user details
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.user)
       );
+
+      // Navigate directly to Dashboard
+      navigate("/Dashboard", {
+        replace: true,
+        state: {
+          message:
+            "Welcome to Sweety! Your account has been created.",
+        },
+      });
+
     } catch (err) {
+      console.error(
+        "Signup Error:",
+        err.response?.data || err.message
+      );
+
       setError(
-        err.response?.data?.message || "Registration failed. Please try again."
+        err.response?.data?.message ||
+        err.message ||
+        "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // Common input styling
   const inputStyle = {
     width: "100%",
     height: 43,
@@ -117,6 +185,8 @@ export default function Signup() {
     fontSize: 12,
     color: "#303038",
     transition: "all .2s ease",
+    boxSizing: "border-box",
+    fontFamily: "Poppins, sans-serif",
   };
 
   const labelStyle = {
@@ -136,15 +206,18 @@ export default function Signup() {
     color: "#fff",
     fontSize: 12,
     fontWeight: 700,
-    cursor: "pointer",
+    cursor: loading ? "not-allowed" : "pointer",
     boxShadow: "0 5px 12px rgba(152,70,79,.16)",
     transition: "all .25s ease",
+    opacity: loading ? 0.7 : 1,
+    fontFamily: "Poppins, sans-serif",
   };
 
   const focusInput = (e) => {
     e.currentTarget.style.borderColor = "#D7838B";
     e.currentTarget.style.background = "#fff";
-    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(231,133,139,.10)";
+    e.currentTarget.style.boxShadow =
+      "0 0 0 3px rgba(231,133,139,.10)";
   };
 
   const blurInput = (e) => {
@@ -153,9 +226,18 @@ export default function Signup() {
     e.currentTarget.style.boxShadow = "none";
   };
 
+  const fieldStyle = {
+    marginBottom: 11,
+  };
+
+  const diabetesTypes = [
+    "Type 1",
+    "Type 2",
+    "Gestational / Pre",
+  ];
+
   return (
     <div className="signup-page">
-
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
@@ -180,20 +262,24 @@ export default function Signup() {
 
         .signup-container {
           max-width: 1150px;
-          min-height: 590px;
           margin: 0 auto 25px;
           display: grid;
           grid-template-columns: 42% 58%;
           background: #fff;
           border-radius: 19px;
           overflow: hidden;
-          box-shadow: 0 10px 30px rgba(40, 35, 40, .08);
+          box-shadow: 0 10px 30px rgba(40,35,40,.08);
           animation: signupEnter .6s ease both;
         }
 
         .signup-left {
           padding: 30px 35px;
-          background: linear-gradient(145deg, #F8EFF0 0%, #FAF5F5 65%, #DDF9EC 100%);
+          background: linear-gradient(
+            145deg,
+            #F8EFF0 0%,
+            #FAF5F5 65%,
+            #DDF9EC 100%
+          );
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -216,14 +302,13 @@ export default function Signup() {
 
         .signup-action:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 17px rgba(152,70,79,.25) !important;
+          box-shadow: 0 8px 17px rgba(152,70,79,.25);
           filter: brightness(1.06);
         }
 
         .signup-social:hover {
           border-color: #D7838B !important;
           background: #FFF8F9 !important;
-          transform: translateY(-2px);
         }
 
         .signup-feature {
@@ -254,6 +339,15 @@ export default function Signup() {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+
+        @keyframes signupPulse {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(235,164,174,.10);
+          }
+          50% {
+            box-shadow: 0 0 0 13px rgba(235,164,174,0);
           }
         }
 
@@ -299,12 +393,19 @@ export default function Signup() {
           .signup-social-row {
             flex-direction: column;
           }
+
+          .signup-type-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .signup-personal-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}</style>
 
       {/* HEADER */}
       <header className="signup-header">
-
         <Link
           to="/"
           style={{
@@ -346,18 +447,12 @@ export default function Signup() {
           </span>
         </Link>
 
-        <div
-          style={{
-            fontSize: 9,
-            color: "#55515A",
-          }}
-        >
+        <div style={{ fontSize: 9, color: "#55515A" }}>
           <span style={{ color: "#169B76", marginRight: 5 }}>
             ◈
           </span>
-          HIPAA & SOC2 Protected
+          Secure Account Registration
         </div>
-
       </header>
 
       {/* MAIN CONTAINER */}
@@ -365,9 +460,7 @@ export default function Signup() {
 
         {/* LEFT PANEL */}
         <section className="signup-left">
-
           <div>
-
             <div
               style={{
                 display: "inline-flex",
@@ -382,7 +475,7 @@ export default function Signup() {
                 marginBottom: 13,
               }}
             >
-              ♥ SWEETY CLINICAL CARE
+              ♥ SWEETY GLUCOSE CARE
             </div>
 
             <h2
@@ -394,7 +487,7 @@ export default function Signup() {
                 color: "#29272D",
               }}
             >
-              Your clinical companion for smarter glycemic control
+              Your companion for smarter glucose tracking
             </h2>
 
             <p
@@ -405,11 +498,10 @@ export default function Signup() {
                 margin: 0,
               }}
             >
-              Take the anxiety out of diabetes management with
-              continuous monitoring, intelligent predictive curves,
-              and real-time insights.
+              Track your blood glucose readings, understand
+              your daily patterns and take an active role
+              in your health journey.
             </p>
-
           </div>
 
           {/* GLUCOSE ILLUSTRATION */}
@@ -442,7 +534,7 @@ export default function Signup() {
               }}
             >
               <span style={{ fontSize: 8, color: "#169B76" }}>
-                ● NORMAL
+                ● SAMPLE READING
               </span>
 
               <strong style={{ fontSize: 28, color: "#333" }}>
@@ -463,15 +555,38 @@ export default function Signup() {
               </svg>
             </div>
 
-            <span style={{ position: "absolute", left: 15, top: 72, color: "#EF8996", fontSize: 19 }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 15,
+                top: 72,
+                color: "#EF8996",
+                fontSize: 19,
+              }}
+            >
               ♥
             </span>
 
-            <span style={{ position: "absolute", right: 15, top: 72, color: "#EF8996", fontSize: 19 }}>
+            <span
+              style={{
+                position: "absolute",
+                right: 15,
+                top: 72,
+                color: "#EF8996",
+                fontSize: 19,
+              }}
+            >
               ♥
             </span>
 
-            <span style={{ position: "absolute", bottom: 18, color: "#EF8996", fontSize: 18 }}>
+            <span
+              style={{
+                position: "absolute",
+                bottom: 18,
+                color: "#EF8996",
+                fontSize: 18,
+              }}
+            >
               ♥
             </span>
 
@@ -487,7 +602,7 @@ export default function Signup() {
                 boxShadow: "0 4px 12px rgba(0,0,0,.07)",
               }}
             >
-              📈 96% In Range
+              📈 Daily Tracking
             </span>
 
             <span
@@ -502,18 +617,16 @@ export default function Signup() {
                 boxShadow: "0 4px 12px rgba(0,0,0,.07)",
               }}
             >
-              ● Target 70–140 mg/dL
+              ● Health Records
             </span>
-
           </div>
 
           {/* FEATURES */}
           <div style={{ display: "grid", gap: 8 }}>
-
             {[
-              "Continuous glucose sync with Dexcom, FreeStyle Libre & manual logs",
-              "Automated clinical target range classification & meal spike alerts",
-              "Doctor-ready PDF telemetry reports formatted for your endocrinologist",
+              "Record and manage daily glucose readings",
+              "View your glucose history and reports",
+              "Monitor your glucose trends over time",
             ].map((feature, index) => (
               <div
                 key={index}
@@ -522,7 +635,7 @@ export default function Signup() {
                   display: "flex",
                   alignItems: "center",
                   gap: 9,
-                  padding: "10px",
+                  padding: 10,
                   background: "rgba(255,255,255,.78)",
                   borderRadius: 10,
                   fontSize: 9,
@@ -545,11 +658,9 @@ export default function Signup() {
                 >
                   ✓
                 </span>
-
                 {feature}
               </div>
             ))}
-
           </div>
 
           <div
@@ -560,9 +671,8 @@ export default function Signup() {
               marginTop: 15,
             }}
           >
-            ◈ Endocrinologist recommended • HIPAA & SOC2 Compliant
+            ◈ Your health matters • Your data is personal
           </div>
-
         </section>
 
         {/* RIGHT PANEL */}
@@ -588,7 +698,8 @@ export default function Signup() {
             </span>
 
             <span style={{ fontSize: 9, color: "#555" }}>
-              <span style={{ color: "#169B76" }}>●</span> Step 1 of 2
+              <span style={{ color: "#169B76" }}>●</span>
+              {" "}Create Account
             </span>
           </div>
 
@@ -610,10 +721,10 @@ export default function Signup() {
               margin: "0 0 15px",
             }}
           >
-            Start monitoring your blood glucose with peace of mind in just 2 minutes.
+            Start monitoring your blood glucose with peace of mind.
           </p>
 
-          {/* SOCIAL BUTTONS */}
+          {/* SOCIAL BUTTONS - UI ONLY */}
           <div
             className="signup-social-row"
             style={{
@@ -625,6 +736,8 @@ export default function Signup() {
             <button
               type="button"
               className="signup-social"
+              disabled
+              title="Google sign-in is not configured"
               style={{
                 flex: 1,
                 height: 38,
@@ -633,17 +746,21 @@ export default function Signup() {
                 background: "#F2F3F5",
                 fontSize: 10,
                 fontWeight: 600,
-                cursor: "pointer",
-                transition: "all .2s ease",
+                cursor: "not-allowed",
+                opacity: 0.65,
               }}
             >
-              <span style={{ color: "#4285F4", fontWeight: 800 }}>G</span>
-              {" "}Google
+              <span style={{ color: "#4285F4", fontWeight: 800 }}>
+                G
+              </span>{" "}
+              Google
             </button>
 
             <button
               type="button"
               className="signup-social"
+              disabled
+              title="Apple Health integration is not configured"
               style={{
                 flex: 1,
                 height: 38,
@@ -652,12 +769,12 @@ export default function Signup() {
                 background: "#F2F3F5",
                 fontSize: 10,
                 fontWeight: 600,
-                cursor: "pointer",
-                transition: "all .2s ease",
+                cursor: "not-allowed",
+                opacity: 0.65,
               }}
             >
-              <span style={{ color: "#98464F" }}>♥</span>
-              {" "}Apple Health
+              <span style={{ color: "#98464F" }}>♥</span>{" "}
+              Apple Health
             </button>
           </div>
 
@@ -671,7 +788,7 @@ export default function Signup() {
           >
             <div style={{ flex: 1, height: 1, background: "#E9E9EB" }} />
             <span style={{ fontSize: 8, color: "#777" }}>
-              OR REGISTER WITH EMAIL
+              REGISTER WITH EMAIL
             </span>
             <div style={{ flex: 1, height: 1, background: "#E9E9EB" }} />
           </div>
@@ -680,38 +797,122 @@ export default function Signup() {
 
             {/* FULL NAME */}
             <div className="signup-field">
-              <label style={labelStyle}>Full Name</label>
+              <label htmlFor="signup-name" style={labelStyle}>
+                Full Name *
+              </label>
 
               <input
+                id="signup-name"
                 className="signup-input"
                 style={inputStyle}
                 type="text"
                 name="name"
-                placeholder="♙  e.g. Sarah Jenkins"
+                placeholder="Enter your full name"
                 value={formData.name}
                 onChange={updateField}
                 onFocus={focusInput}
                 onBlur={blurInput}
                 autoComplete="name"
+                required
               />
             </div>
 
             {/* EMAIL */}
             <div className="signup-field">
-              <label style={labelStyle}>Email Address</label>
+              <label htmlFor="signup-email" style={labelStyle}>
+                Email Address *
+              </label>
 
               <input
+                id="signup-email"
                 className="signup-input"
                 style={inputStyle}
                 type="email"
                 name="email"
-                placeholder="✉  e.g. sarah@example.com"
+                placeholder="Enter your email address"
                 value={formData.email}
                 onChange={updateField}
                 onFocus={focusInput}
                 onBlur={blurInput}
                 autoComplete="email"
+                required
               />
+            </div>
+
+            {/* PHONE NUMBER */}
+            <div className="signup-field">
+              <label htmlFor="signup-phone" style={labelStyle}>
+                Phone Number
+              </label>
+
+              <input
+                id="signup-phone"
+                className="signup-input"
+                style={inputStyle}
+                type="tel"
+                name="phone"
+                placeholder="Enter your phone number"
+                value={formData.phone}
+                onChange={updateField}
+                onFocus={focusInput}
+                onBlur={blurInput}
+                autoComplete="tel"
+                maxLength={15}
+              />
+            </div>
+
+            {/* DATE OF BIRTH AND SEX */}
+            <div
+              className="signup-personal-grid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+              }}
+            >
+              <div className="signup-field">
+                <label htmlFor="signup-dob" style={labelStyle}>
+                  Date of Birth
+                </label>
+
+                <input
+                  id="signup-dob"
+                  className="signup-input"
+                  style={inputStyle}
+                  type="date"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={updateField}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
+                  max={maxDate}
+                />
+              </div>
+
+              <div className="signup-field">
+                <label htmlFor="signup-sex" style={labelStyle}>
+                  Sex
+                </label>
+
+                <select
+                  id="signup-sex"
+                  className="signup-input"
+                  style={inputStyle}
+                  name="sex"
+                  value={formData.sex}
+                  onChange={updateField}
+                  onFocus={focusInput}
+                  onBlur={blurInput}
+                >
+                  <option value="">Select sex</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">
+                    Prefer not to say
+                  </option>
+                </select>
+              </div>
             </div>
 
             {/* DIABETES CLASSIFICATION */}
@@ -725,15 +926,16 @@ export default function Signup() {
                 }}
               >
                 <label style={{ ...labelStyle, marginBottom: 0 }}>
-                  Diabetes Classification
+                  Diabetes Classification *
                 </label>
 
                 <span style={{ fontSize: 8, color: "#777" }}>
-                  Personalize your tracking
+                  Select your type
                 </span>
               </div>
 
               <div
+                className="signup-type-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(3, 1fr)",
@@ -743,7 +945,7 @@ export default function Signup() {
                   borderRadius: 9,
                 }}
               >
-                {["Type 1", "Type 2", "Gestational / Pre"].map((type) => (
+                {diabetesTypes.map((type) => (
                   <button
                     type="button"
                     key={type}
@@ -758,9 +960,13 @@ export default function Signup() {
                       border: "none",
                       borderRadius: 7,
                       background:
-                        formData.diabetesType === type ? "#fff" : "transparent",
+                        formData.diabetesType === type
+                          ? "#fff"
+                          : "transparent",
                       color:
-                        formData.diabetesType === type ? "#A84C55" : "#555",
+                        formData.diabetesType === type
+                          ? "#A84C55"
+                          : "#555",
                       fontSize: 9,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -779,10 +985,13 @@ export default function Signup() {
 
             {/* PASSWORD */}
             <div className="signup-field">
-              <label style={labelStyle}>Create Password</label>
+              <label htmlFor="signup-password" style={labelStyle}>
+                Create Password *
+              </label>
 
               <div style={{ position: "relative" }}>
                 <input
+                  id="signup-password"
                   className="signup-input"
                   style={{ ...inputStyle, paddingRight: 42 }}
                   type={showPassword ? "text" : "password"}
@@ -793,10 +1002,15 @@ export default function Signup() {
                   onFocus={focusInput}
                   onBlur={blurInput}
                   autoComplete="new-password"
+                  required
+                  minLength={8}
                 />
 
                 <button
                   type="button"
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: "absolute",
@@ -853,10 +1067,16 @@ export default function Signup() {
 
             {/* CONFIRM PASSWORD */}
             <div className="signup-field">
-              <label style={labelStyle}>Confirm Password</label>
+              <label
+                htmlFor="signup-confirm-password"
+                style={labelStyle}
+              >
+                Confirm Password *
+              </label>
 
               <div style={{ position: "relative" }}>
                 <input
+                  id="signup-confirm-password"
                   className="signup-input"
                   style={{ ...inputStyle, paddingRight: 42 }}
                   type={showConfirmPassword ? "text" : "password"}
@@ -867,10 +1087,16 @@ export default function Signup() {
                   onFocus={focusInput}
                   onBlur={blurInput}
                   autoComplete="new-password"
+                  required
                 />
 
                 <button
                   type="button"
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
                   onClick={() =>
                     setShowConfirmPassword(!showConfirmPassword)
                   }
@@ -918,6 +1144,7 @@ export default function Signup() {
               }}
             >
               <input
+                id="signup-agree"
                 type="checkbox"
                 name="agree"
                 checked={formData.agree}
@@ -930,6 +1157,7 @@ export default function Signup() {
               />
 
               <label
+                htmlFor="signup-agree"
                 style={{
                   fontSize: 9,
                   color: "#666",
@@ -937,14 +1165,20 @@ export default function Signup() {
                 }}
               >
                 I agree to the{" "}
-                <Link to="/terms" style={{ color: "#A84C55" }}>
+                <Link
+                  to="/terms"
+                  style={{ color: "#A84C55" }}
+                >
                   Terms of Service
                 </Link>{" "}
                 and acknowledge the{" "}
-                <Link to="/privacy" style={{ color: "#A84C55" }}>
+                <Link
+                  to="/privacy"
+                  style={{ color: "#A84C55" }}
+                >
                   Privacy Policy
                 </Link>{" "}
-                regarding health telemetry.
+                regarding my personal information.
               </label>
             </div>
 
@@ -971,22 +1205,12 @@ export default function Signup() {
               className="signup-action"
               type="submit"
               disabled={loading}
-              style={{
-                ...primaryButton,
-                opacity: loading ? 0.7 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
+              style={primaryButton}
             >
-              {loading ? "Creating Account..." : "Create Patient Account  →"}
+              {loading
+                ? "Creating Account..."
+                : "Create Patient Account →"}
             </button>
-
           </form>
 
           {/* LOGIN LINK */}
@@ -1010,42 +1234,31 @@ export default function Signup() {
               Sign in here
             </Link>
           </p>
-
         </section>
       </div>
 
       {/* FOOTER */}
       <footer className="signup-footer">
         <span>
-          © 2026 Sweety Health Technologies Inc. All rights reserved.
+          © 2026 Sweety. All rights reserved.
         </span>
 
         <div style={{ display: "flex", gap: 15 }}>
-          <Link to="/privacy" style={{ color: "inherit", textDecoration: "none" }}>
+          <Link
+            to="/privacy"
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
             Privacy Policy
           </Link>
 
-          <Link to="/terms" style={{ color: "inherit", textDecoration: "none" }}>
+          <Link
+            to="/terms"
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
             Terms of Service
-          </Link>
-
-          <Link to="/guidelines" style={{ color: "inherit", textDecoration: "none" }}>
-            Clinical Guidelines
           </Link>
         </div>
       </footer>
-
-      <style>{`
-        @keyframes signupPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(235,164,174,.10);
-          }
-          50% {
-            box-shadow: 0 0 0 13px rgba(235,164,174,0);
-          }
-        }
-      `}</style>
-
     </div>
   );
 }
