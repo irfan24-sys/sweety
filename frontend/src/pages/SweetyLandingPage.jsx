@@ -455,11 +455,7 @@ export default function SweetyLandingPage() {
           <span className="sweety-footer-brand">Sweety <span style={{ color: "#168b6c", fontSize: 8 }}>● HEALTH TRACKING</span></span>
           <span className="sweety-footer-note">© 2026 Sweety. Your health journey, thoughtfully supported.</span>
         </div>
-        <nav className="sweety-footer-links" aria-label="Footer navigation">
-          <Link to="/privacy-policy">Privacy Policy</Link>
-          <Link to="/terms">Terms of Service</Link>
-          <Link to="/support">Support</Link>
-        </nav>
+        
       </footer>
     </div>
   );
