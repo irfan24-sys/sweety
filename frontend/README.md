@@ -1,16 +1,45 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Technologies Used
 
-Currently, two official plugins are available:
+- React.js
+- Vite
+- JavaScript
+- CSS
+- Axios
+- React Router
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Environment Setup
 
-## React Compiler
+Create a `.env` file in the frontend root directory.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Expanding the Oxlint configuration
+VITE_BACKEND_URL=http://localhost:5000/api
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Testing
+
+Automated frontend tests are not currently documented. A test framework and test scripts should be configured before running automated tests.
+
+## Notes
+
+- Axios is used to communicate with the backend APIs.
+- API services are organized inside `src/api`.
+- Main application pages are organized inside `src/pages`.
+- Shared dashboard components are maintained inside `src/components`.
+- With more time, I would add automated tests, improve accessibility, and enhance the overall user experience.
+
+
+
+### Assumptions
+- Glucose readings are recorded in mg/dL.
+- Users provide their blood glucose readings manually.
+- Each reading belongs to an authenticated user.
+- Sample readings are dummy data created for demonstration purposes.
+- The application is designed to support diabetes tracking and awareness, not replace professional medical advice.
+
+### Future Improvements
+- Integrate AI-based food image analysis and nutritional estimation.
+- Add Indian food recommendations based on meal information.
+- Improve glucose trend analysis and personalized insights.
+- Add reminders for glucose testing and medication schedules.
+- Implement stronger input validation and automated testing.
+- Improve security, performance, and error handling.
