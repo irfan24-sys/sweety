@@ -1,5 +1,4 @@
 
-import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 function DashboardSidebar() {
@@ -170,16 +169,7 @@ function DashboardSidebar() {
 
       {/* Bottom section */}
       <div style={styles.bottom}>
-        <div style={styles.help}>
-          <h4 style={styles.helpTitle}>
-            <span style={{ color: "#C65F6B" }}>✚</span>
-            Need Assistance?
-          </h4>
-
-          <p style={styles.helpText}>
-            Our support team is available to help you with questions.
-          </p>
-        </div>
+       
 
         <button
           type="button"

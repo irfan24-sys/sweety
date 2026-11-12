@@ -11,7 +11,6 @@ import MyReadings from "./pages/MyReadings";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
 
-import "./index.css";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");

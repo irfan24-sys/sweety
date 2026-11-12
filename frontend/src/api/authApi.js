@@ -1,9 +1,7 @@
 
 import api from "./axios";
 
-// ==========================================
 // USER SIGNUP API
-// ==========================================
 export const signupUser = async (userData) => {
   try {
     const response = await api.post("/auth/signup", userData);
@@ -16,10 +14,7 @@ export const signupUser = async (userData) => {
     throw error;
   }
 };
-
-// ==========================================
 // USER LOGIN API
-// ==========================================
 export const loginUser = async (userData) => {
   try {
     const response = await api.post("/auth/login", userData);
@@ -33,9 +28,6 @@ export const loginUser = async (userData) => {
   }
 };
 
-// ==========================================
-// GET USER PROFILE API
-// ==========================================
 export const getUserProfile = async () => {
   try {
     const response = await api.get("/user/profile");
@@ -48,10 +40,7 @@ export const getUserProfile = async () => {
     throw error;
   }
 };
-
-// ==========================================
 // UPDATE USER PROFILE API
-// ==========================================
 export const updateUserProfile = async (profileData) => {
   try {
     const response = await api.put("/user/profile", profileData);
@@ -64,10 +53,7 @@ export const updateUserProfile = async (profileData) => {
     throw error;
   }
 };
-
-// ==========================================
 // CHANGE PASSWORD API
-// ==========================================
 export const changeUserPassword = async (passwordData) => {
   try {
     const response = await api.put(
@@ -83,10 +69,7 @@ export const changeUserPassword = async (passwordData) => {
     throw error;
   }
 };
-
-// ==========================================
 // USER LOGOUT
-// ==========================================
 export const logoutUser = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");

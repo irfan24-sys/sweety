@@ -2,8 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getReadings } from "../api/readingApi";
 
-// Example display range. Adjust according to the user's
-// healthcare professional's recommended target range.
+
 const TARGET_MIN = 70;
 const TARGET_MAX = 140;
 
@@ -147,9 +146,8 @@ function Reports() {
 
   const today = getToday();
 
-  // ---------------------------------
   // Fetch readings
-  // ---------------------------------
+
 
   const fetchReadings = async () => {
     try {
@@ -179,9 +177,7 @@ function Reports() {
     fetchReadings();
   }, []);
 
-  // ---------------------------------
-  // Report date ranges
-  // ---------------------------------
+  
 
   const monthRange = getMonthRange();
   const previousRange = getPreviousMonthRange();
@@ -223,9 +219,7 @@ function Reports() {
   const monthStats = calculateStats(monthReadings);
   const previousStats = calculateStats(previousMonthReadings);
 
-  // ---------------------------------
   // Time slot averages
-  // ---------------------------------
 
   const slotStats = useMemo(() => {
     return SLOTS.map((slot) => {
@@ -252,12 +246,8 @@ function Reports() {
     });
   }, [selectedReadings]);
 
-  // ---------------------------------
   // Prepare individual readings for chart
-  // ---------------------------------
-  // Each point represents one actual reading returned by the API.
-  // The latest 20 readings are displayed to keep the graph readable.
-
+  
   const chartData = useMemo(() => {
     return [...selectedReadings]
       .filter((reading) => Number.isFinite(Number(reading.value)))
@@ -330,9 +320,7 @@ function Reports() {
     ((300 - TARGET_MIN) / 260) *
       (chartHeight - chartPadding.top - chartPadding.bottom);
 
-  // ---------------------------------
-  // Data coverage
-  // ---------------------------------
+
 
   const todaySlotsRecorded = SLOTS.filter((slot) =>
     todayReadings.some((reading) => reading.slot === slot)
@@ -342,10 +330,6 @@ function Reports() {
     (slot) =>
       !todayReadings.some((reading) => reading.slot === slot)
   );
-
-  // ---------------------------------
-  // PDF / Share
-  // ---------------------------------
 
   const handlePDFExport = () => {
     window.print();
@@ -1348,14 +1332,7 @@ function Reports() {
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            window.location.href = "/dashboard";
-          }}
-          style={styles.button}
-        >
-          + &nbsp; Log Glucose Reading
-        </button>
+        
       </section>
     </div>
   );

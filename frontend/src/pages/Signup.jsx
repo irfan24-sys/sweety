@@ -201,7 +201,7 @@ export default function Signup() {
     }
   };
 
-  // Common input styling
+  
 
   const inputStyle = {
 

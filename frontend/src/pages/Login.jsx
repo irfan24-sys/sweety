@@ -61,7 +61,7 @@ export default function Login() {
         throw new Error("Invalid login response from server.");
       }
 
-      // Save JWT token
+      
       localStorage.setItem("token", response.token);
 
       // Save logged-in user details
@@ -70,7 +70,6 @@ export default function Login() {
         JSON.stringify(response.user)
       );
 
-      // Navigate to dashboard
       navigate("/dashboard", { replace: true });
 
     } catch (err) {

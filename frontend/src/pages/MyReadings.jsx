@@ -118,9 +118,7 @@ function MyReadings() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // -----------------------------
   // Fetch readings
-  // -----------------------------
 
   const fetchReadings = async () => {
     try {
@@ -149,6 +147,7 @@ function MyReadings() {
   useEffect(() => {
     fetchReadings();
   }, []);
+
 
   // -----------------------------
   // Search and filters
@@ -246,11 +245,7 @@ function MyReadings() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-
-  // -----------------------------
   // Summary calculations
-  // -----------------------------
-
   const values = readings.map((item) => Number(item.value));
 
   const inTarget = values.filter(
@@ -272,10 +267,7 @@ function MyReadings() {
   const highest = values.length
     ? Math.max(...values)
     : "--";
-
-  // -----------------------------
   // Add / edit modal
-  // -----------------------------
 
   const openAddModal = () => {
     setEditingId(null);
@@ -408,10 +400,7 @@ function MyReadings() {
       setDeleting(false);
     }
   };
-
-  // -----------------------------
   // CSV export
-  // -----------------------------
 
   const exportCSV = () => {
     if (!filteredReadings.length) {
@@ -457,11 +446,7 @@ function MyReadings() {
 
     URL.revokeObjectURL(url);
   };
-
-  // -----------------------------
-  // Styles
-  // -----------------------------
-
+ 
   const styles = {
     page: {
       width: "100%",

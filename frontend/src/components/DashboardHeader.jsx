@@ -23,7 +23,6 @@ function DashboardHeader() {
     year: "numeric",
   });
 
-  // FETCH NOTIFICATIONS
   const fetchNotifications = useCallback(async () => {
     try {
       setLoadingNotifications(true);
@@ -42,7 +41,7 @@ function DashboardHeader() {
     }
   }, []);
 
-  // FETCH ON LOAD AND REFRESH EVERY 15 SECONDS
+  
   useEffect(() => {
     fetchNotifications();
 
@@ -66,7 +65,7 @@ function DashboardHeader() {
     }
   };
 
-  // MARK ALL NOTIFICATIONS AS READ
+ 
   const handleMarkAllRead = async () => {
     try {
       await markAllNotificationsRead();
@@ -79,10 +78,7 @@ function DashboardHeader() {
     }
   };
 
-  // ADD READING BUTTON EVENT
-  const handleAddReading = () => {
-    window.dispatchEvent(new Event("sweety:add-reading"));
-  };
+  
 
   const styles = {
     header: {
@@ -327,14 +323,7 @@ function DashboardHeader() {
           {today}
         </div>
 
-        {/* ADD READING BUTTON */}
-        <button
-          type="button"
-          style={styles.addButton}
-          onClick={handleAddReading}
-        >
-          + Add Reading
-        </button>
+       
 
         {/* NOTIFICATION BELL */}
         <div style={styles.notificationWrapper}>
